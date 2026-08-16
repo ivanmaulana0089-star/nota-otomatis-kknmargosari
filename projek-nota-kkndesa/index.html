@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Nota Keuangan Desa Margosari</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka SheetJS untuk ekspor Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <!-- DASHBOARD UTAMA -->
+    <div class="container no-print">
+        <h2 class="main-title">Sistem Nota Keuangan BUMDes Margosari</h2>
+        
+        <form id="nota-form">
+            <div class="form-grid">
+                <!-- SISI KIRI: INFORMASI UTAMA TRANSAKSI -->
+                <div class="card-section">
+                    <h4 class="section-title">Informasi Transaksi</h4>
+                    
+                    <div class="form-group">
+                        <label for="tanggal">Tanggal Transaksi:</label>
+                        <input type="date" id="tanggal" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jenis-usaha">Jenis Usaha:</label>
+                        <select id="jenis-usaha" required>
+                            <option value="Air">Air</option>
+                            <option value="Sampah">Sampah</option>
+                            <option value="Sewa Ruko">Sewa Ruko</option>
+                            <option value="Kolam Lele">Kolam Lele</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nama-orang">Nama (Penerima):</label>
+                        <input type="text" id="nama-orang" placeholder="Contoh: Pak Budi / Bp. RT 02" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jenis-transaksi">Jenis Transaksi:</label>
+                        <select id="jenis-transaksi">
+                            <option value="masuk">Uang Masuk (+)</option>
+                            <option value="keluar">Uang Keluar (-)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SISI KANAN: INPUT ITEM BARANG (MULTI-ITEM) -->
+                <div class="card-section">
+                    <h4 class="section-title">Input Item Barang</h4>
+                    
+                    <div class="item-input-grid">
+                        <div class="form-group span-2">
+                            <label for="nama-barang">Nama Barang / Keperluan:</label>
+                            <input type="text" id="nama-barang" placeholder="Contoh: ATK Kantor Desa">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jumlah">Jumlah (Qty):</label>
+                            <input type="number" id="jumlah" min="1" value="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nominal">Harga / Nominal (Rp):</label>
+                            <input type="number" id="nominal" placeholder="Contoh: 150000">
+                        </div>
+
+                        <div class="form-group span-2">
+                            <button type="button" id="btn-tambah-item" class="btn-secondary">
+                                ➕ Tambah Barang
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABEL SEMENTARA BARANG -->
+                    <div class="table-wrapper">
+                        <table class="tabel-sementara">
+                            <thead>
+                                <tr>
+                                    <th>Nama Barang</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Harga Satuan</th>
+                                    <th style="text-align: right;">Total</th>
+                                    <th style="text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-item-sementara">
+                                <!-- Terisi via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOMBOL SIMPAN UTAMA -->
+            <button type="submit" class="btn-primary-submit">
+                💾 Simpan Transaksi Ke Tabel
+            </button>
+        </form>
+
+        <hr class="divider">
+
+        <!-- RIWAYAT TRANSAKSI DENGAN FILTER REKAPAN TANGGAL -->
+        <div class="tabel-header">
+            <h3>Daftar Riwayat Transaksi</h3>
+            <div class="filter-container">
+                <label for="filter-tanggal">Rekapan Tanggal:</label>
+                <input type="date" id="filter-tanggal">
+                <button type="button" id="btn-reset-filter" class="btn-reset">Tampilkan Semua</button>
+                <button type="button" id="btn-excel-semua" class="btn-ekspor-excel">
+                    📊 Ekspor ke Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: center; width: 40px;">No.</th>
+                        <th>No. Nota</th>
+                        <th>Tanggal</th>
+                        <th>Jenis Usaha</th>
+                        <th>Nama Orang</th>
+                        <th>Detail Barang</th>
+                        <th>Jenis</th>
+                        <th>Nominal Item</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel-body">
+                    <!-- Terisi via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TEMPLATE NOTA CETAK (PRINT PDF) -->
+    <div id="nota-cetak" class="print-only">
+        <div class="kop-desa">
+            <div class="teks-kop">
+                <h3>PEMERINTAH KABUPATEN KENDAL • KECAMATAN LIMBANGAN</h3>
+                <h2>BADAN USAHA MILIK DESA MARGA KARYA SEJAHTERA</h2>
+                <p>Jl. Sunan Katong, RT 03 / RW 01, Desa Margosari, Kec. Limbangan, Kab. Kendal, Prov. Jawa Tengah, Kode Pos 51383</p> 
+                <p>Email: bumdesmargosasrimks@gmail.com</p>
+            </div>
+        </div>
+        <hr class="garis-kop">
+
+        <div class="judul-nota">
+            <h2>NOTA BUKTI TRANSAKSI BUMDes MARGOSARI</h2>
+            <p>ID Transaksi: <span id="nota-id">-</span></p>
+        </div>
+
+        <div class="detail-transaksi">
+            <p><strong>Nama:</strong> <span id="nota-nama">-</span></p>
+            <p><strong>Tanggal Catat:</strong> <span id="nota-tanggal">-</span></p>
+            <p><strong>Jenis Usaha:</strong> <span id="nota-usaha">-</span></p>
+            <p><strong>Kategori:</strong> <span id="nota-jenis">-</span></p>
+            
+            <table class="tabel-nota">
+                <thead>
+                    <tr>
+                        <th>Nama Barang / Uraian Keperluan</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Harga Satuan</th>
+                        <th style="text-align: right;">Total Nominal</th>
+                    </tr>
+                </thead>
+                <tbody id="nota-items-body">
+                    <!-- Terisi via JS -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" style="text-align: right;">TOTAL:</th>
+                        <th id="nota-total-nominal" style="text-align: right;">Rp 0</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="tanda-tangan-container">
+            <div class="tanda-tangan">
+                <p>Mengetahui,</p>
+                <p>Kepala BUMDes Margosari</p>
+                <br><br><br><br>
+                <p><strong>( ___________________________ )</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
